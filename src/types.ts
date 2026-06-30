@@ -16,21 +16,49 @@ export interface KPI {
   healthy: boolean;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  vertical: string;
+  unitPrice: number;
+  unit: string;
+  requiresFieldTickets: number;
+  approvedBulkRate?: number;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  vertical: string;
+  country: string;
+  onboardingStatus: OnboardingStatus | 'none';
+  fieldTicketsRequired: number;
+  creditTier: 'standard' | 'high_value' | 'international' | 'new';
+  systemsSynced: { salesforce: boolean; intacct: boolean; cloudCore: boolean };
+  notes: string;
+}
+
 export interface Quote {
   id: string;
+  customerId: string;
   customer: string;
   vertical: string;
+  productId: string;
   product: string;
+  quantity: number;
+  unitPrice: number;
   amount: number;
   status: QuoteStatus;
   createdDate: string;
   daysOpen: number;
   pricingError?: string;
   approver?: string;
+  discountPct?: number;
 }
 
 export interface CustomerOnboarding {
   id: string;
+  customerId: string;
   customer: string;
   country: string;
   status: OnboardingStatus;
@@ -40,11 +68,13 @@ export interface CustomerOnboarding {
   signed: boolean;
   approver: string;
   submittedDate: string;
+  taxId?: string;
 }
 
 export interface Order {
   id: string;
   quoteId: string;
+  customerId: string;
   customer: string;
   amount: number;
   status: OrderStatus;
@@ -54,9 +84,18 @@ export interface Order {
   holdReason?: string;
 }
 
+export type HoldReasonCategory =
+  | 'missing_docs'
+  | 'pricing_error'
+  | 'onboarding_pending'
+  | 'unbilled_recovery'
+  | 'support_docs'
+  | 'other';
+
 export interface Invoice {
   id: string;
   orderId: string;
+  customerId: string;
   customer: string;
   amount: number;
   status: InvoiceStatus;
@@ -64,10 +103,49 @@ export interface Invoice {
   dueDate?: string;
   daysOutstanding?: number;
   holdReason?: string;
+  holdCategory?: HoldReasonCategory;
   dunningStage?: number;
+  revRecStatus?: 'pending' | 'recognized';
+  autoPosted?: boolean;
+  orderSubmittedDate?: string;
+}
+
+export interface FieldTicketDoc {
+  id: string;
+  orderId: string;
+  customerId: string;
+  customer: string;
+  fileName: string;
+  docType: string;
+  uploadedDate: string;
+  uploadedBy: string;
+}
+
+export interface Dispute {
+  id: string;
+  invoiceId: string;
+  customerId: string;
+  customer: string;
+  reason: string;
+  status: 'open' | 'investigating' | 'resolved';
+  rootCause?: string;
+  openedDate: string;
+  assignedTo: string;
+}
+
+export interface RecoveryPlan {
+  id: string;
+  customerId: string;
+  customer: string;
+  invoiceId: string;
+  issue: string;
+  status: 'active' | 'completed';
+  owner: string;
+  action: string;
 }
 
 export interface ARAccount {
+  customerId: string;
   customer: string;
   balance: number;
   current: number;
@@ -97,4 +175,47 @@ export interface Workstream {
   nearTermActions: string[];
 }
 
-export type ViewId = 'dashboard' | 'quotes' | 'orders' | 'invoices' | 'collections' | 'program';
+export interface ActivityLog {
+  id: string;
+  timestamp: string;
+  message: string;
+  entityType: 'quote' | 'order' | 'invoice' | 'onboarding' | 'customer';
+  entityId: string;
+}
+
+export type ViewId =
+  | 'dashboard'
+  | 'quotes'
+  | 'orders'
+  | 'invoices'
+  | 'backlog'
+  | 'collections'
+  | 'disputes'
+  | 'customers'
+  | 'catalog'
+  | 'program';
+
+export type ModalId =
+  | 'create-quote'
+  | 'create-onboarding'
+  | 'quote-detail'
+  | 'order-detail'
+  | 'upload-document'
+  | 'create-dispute'
+  | 'tag-hold'
+  | null;
+
+export const HOLD_CATEGORY_LABELS: Record<HoldReasonCategory, string> = {
+  missing_docs: 'Missing Field Tickets / Support Docs',
+  pricing_error: 'Pricing Discrepancy',
+  onboarding_pending: 'Onboarding Not Approved',
+  unbilled_recovery: 'Unbilled / Recovery',
+  support_docs: 'Missing Support Documentation',
+  other: 'Other',
+};
+
+export interface Toast {
+  id: string;
+  type: 'success' | 'error' | 'info';
+  message: string;
+}

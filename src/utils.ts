@@ -36,6 +36,10 @@ export function statusClass(status: string): string {
     pending: 'badge-neutral',
     passed: 'badge-success',
     current: 'badge-warning',
+    investigating: 'badge-warning',
+    resolved: 'badge-success',
+    none: 'badge-neutral',
+    recognized: 'badge-success',
   };
   return map[status] ?? 'badge-neutral';
 }
