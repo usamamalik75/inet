@@ -175,6 +175,14 @@ export interface Workstream {
   nearTermActions: string[];
 }
 
+export interface ProgramDecision {
+  id: string;
+  title: string;
+  owner: string;
+  status: 'open' | 'pending' | 'decided';
+  summary: string;
+}
+
 export interface ActivityLog {
   id: string;
   timestamp: string;

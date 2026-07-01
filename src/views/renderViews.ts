@@ -5,6 +5,7 @@ import {
   getDisputes,
   getFieldTickets,
   getKpis,
+  getOpenDecisions,
   getProgramGates,
   getProgramMeta,
   getRecoveryPlans,
@@ -104,10 +105,6 @@ export function renderDashboard(): string {
     <section class="section">
       <h2>Program KPIs <span class="live-badge">LIVE</span></h2>
       <div class="kpi-grid">${renderKpiCards()}</div>
-    </section>
-    <section class="section">
-      <h2>Architecture Comparison</h2>
-      ${renderArchitectureComparison()}
     </section>`;
 }
 
@@ -286,7 +283,7 @@ export function renderInvoices(): string {
 
 export function renderCollections(): string {
   const { arAccounts, invoices } = getState();
-  const { totalAR } = getSummaryStats();
+  const { totalAR, dso, cei } = getSummaryStats();
   const dunningLadder = getDunningLadder();
 
   const arRows = arAccounts
@@ -333,6 +330,11 @@ export function renderCollections(): string {
       </div>
       <div class="header-badge">Total AR: ${formatCurrency(totalAR)}</div>
     </header>
+    <div class="stat-row">
+      <div class="stat-card stat-info"><div class="stat-value">${dso} days</div><div class="stat-label">Live DSO</div></div>
+      <div class="stat-card stat-neutral"><div class="stat-value">${cei}%</div><div class="stat-label">Collections Effectiveness</div></div>
+      <div class="stat-card stat-warning"><div class="stat-value">Monthly</div><div class="stat-label">Statement Cadence</div></div>
+    </div>
     <div class="flow-banner">
       <span>Invoice Sent</span><span class="flow-arrow">→</span>
       <span>Revenue Recognized</span><span class="flow-arrow">→</span>
@@ -573,6 +575,7 @@ export function renderDisputes(): string {
 
 export function renderProgram(): string {
   const meta = getProgramMeta();
+  const decisions = getOpenDecisions();
   const gateCards = getProgramGates()
     .map(
       (g) => `
@@ -601,6 +604,20 @@ export function renderProgram(): string {
     )
     .join('');
 
+  const decisionCards = decisions
+    .map(
+      (d) => `
+    <div class="gate-card gate-${d.status === 'decided' ? 'passed' : d.status === 'pending' ? 'current' : 'pending'}">
+      <div class="gate-header">
+        <span class="badge ${statusClass(d.status === 'decided' ? 'passed' : d.status === 'pending' ? 'current' : 'pending')}">${statusLabel(d.status === 'decided' ? 'passed' : d.status === 'pending' ? 'current' : 'pending')}</span>
+        <span class="gate-when">${d.owner}</span>
+      </div>
+      <h3>${d.title}</h3>
+      <p>${d.summary}</p>
+    </div>`
+    )
+    .join('');
+
   return `
     <header class="page-header">
       <div>
@@ -609,7 +626,13 @@ export function renderProgram(): string {
       </div>
     </header>
     <section class="section"><h2>Decision Gates</h2><div class="gate-grid">${gateCards}</div></section>
-    <section class="section"><h2>Workstreams</h2><div class="ws-grid">${wsCards}</div></section>`;
+    <section class="section"><h2>Open Decisions</h2><div class="gate-grid">${decisionCards}</div></section>
+    <section class="section"><h2>Workstreams</h2><div class="ws-grid">${wsCards}</div></section>
+    <section class="section">
+      <h2>Platform Direction</h2>
+      <p class="section-desc">This comparison supports planning and governance, so it lives here instead of the day-to-day dashboard.</p>
+      ${renderArchitectureComparison()}
+    </section>`;
 }
 
 export function renderModal(): string {

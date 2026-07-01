@@ -8,6 +8,7 @@ import type {
   Invoice,
   KPI,
   Order,
+  ProgramDecision,
   Quote,
   RecoveryPlan,
 } from '../types';
@@ -209,6 +210,17 @@ export const workstreams = [
   { id: 'ws3', name: 'WS3 — Invoice-to-Cash', lead: 'Steve Manz', phase: 'Near-term fixes active', progress: 40, nearTermActions: ['Dunning ladder enforced in custom AR module', 'Weekly AR aging review standing', 'Exxon / Diamondback / Apache recovery plans active'] },
   { id: 'ws4', name: 'WS4 — Platform & Data Migration', lead: 'Stan Hughey', phase: 'Architecture (M2–M3)', progress: 30, nearTermActions: ['Customer master reconciliation across 3 systems', 'No-delete-notes policy issued', 'CloudCore access restricted by role'] },
   { id: 'ws5', name: 'WS5 — Change Management & Training', lead: 'PMO', phase: 'Mobilize (M1–M3)', progress: 25, nearTermActions: ['Question Routing Map published', 'Onboarding SOP drafted from Tracy checklist', 'Role-based training plan in development'] },
+];
+
+export const openDecisions: ProgramDecision[] = [
+  { id: 'dec-1', title: '9-Month Schedule Approval', owner: 'Steve / Board', status: 'pending', summary: 'Confirm the compressed timeline and added resource investment needed to hold the M9 cutover target.' },
+  { id: 'dec-2', title: 'Late Fees', owner: 'Steve / AR', status: 'open', summary: 'Decide if late fees will be enabled after prerequisites, with offset handling recognized only on collection.' },
+  { id: 'dec-3', title: 'Salesforce Build Partner', owner: 'Steve / Stan', status: 'pending', summary: 'Choose SI partner versus in-house execution; the compressed plan assumes a partner is required.' },
+  { id: 'dec-4', title: 'System Investments', owner: 'Steve / Mark', status: 'open', summary: 'Prioritize AR portal, AP approval portal, inventory, and financial reporting follow-on investments.' },
+  { id: 'dec-5', title: 'Customer Approval-Gate Owner', owner: 'Steve / Demi', status: 'pending', summary: 'Confirm the long-term owner of the onboarding approval gate after the interim backup arrangement.' },
+  { id: 'dec-6', title: 'KPI Sign-Off', owner: 'Steve / Mark', status: 'pending', summary: 'Lock KPI definitions and targets for Steering and board reporting at Gate 1.' },
+  { id: 'dec-7', title: 'Invoicing System of Record', owner: 'Steve / Stan', status: 'open', summary: 'Confirm Intacct as invoicing owner and validate support for subscription and usage billing boundaries.' },
+  { id: 'dec-8', title: 'Public-Company Timing', owner: 'Steve / Mark', status: 'open', summary: 'Align Q2C decisions with audit and IPO readiness timing once the broader public-company plan firms up.' },
 ];
 
 export const architectureComparison = {

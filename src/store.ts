@@ -11,6 +11,7 @@ import {
   initialKpis,
   initialOnboardings,
   initialOrders,
+  openDecisions,
   initialQuotes,
   initialRecoveryPlans,
   programGates,
@@ -34,6 +35,7 @@ import type {
   RecoveryPlan,
   Toast,
   ViewId,
+  ProgramDecision,
 } from './types';
 
 interface AppState {
@@ -157,6 +159,10 @@ export function getProgramGates() {
 
 export function getWorkstreams() {
   return workstreams;
+}
+
+export function getOpenDecisions(): ProgramDecision[] {
+  return openDecisions;
 }
 
 export function getArchitectureComparison() {
@@ -790,7 +796,8 @@ export function getSummaryStats() {
     .reduce((s, o) => s + o.amount, 0);
   const openDisputes = state.disputes.filter((d) => d.status !== 'resolved').length;
   const dso = getLiveDso();
-  return { unbilled, overdue, stuckQuotes, heldOrders, totalAR, backlog, openDisputes, dso };
+  const cei = (state as AppState & { _cei?: number })._cei ?? 65;
+  return { unbilled, overdue, stuckQuotes, heldOrders, totalAR, backlog, openDisputes, dso, cei };
 }
 
 export function refreshQuoteAges(): void {

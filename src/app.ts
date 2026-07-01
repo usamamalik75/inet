@@ -34,6 +34,7 @@ import { navItems, renderShell } from './views/renderViews';
 const MODAL_ACTIONS = [
   'open-create-quote',
   'open-create-onboarding',
+  'open-onboarding',
   'open-upload-document',
   'open-create-dispute',
   'close-modal',
@@ -146,6 +147,9 @@ function handleAction(action: string, id?: string, e?: Event): void {
       openModal('create-quote');
       break;
     case 'open-create-onboarding':
+      openModal('create-onboarding', id);
+      break;
+    case 'open-onboarding':
       openModal('create-onboarding', id);
       break;
     case 'open-upload-document':
