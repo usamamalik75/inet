@@ -19,7 +19,7 @@ export function actionBtn(action: string, id: string, label: string, variant = '
 export function renderBreadcrumb(items: { label: string; view?: string; entityId?: string }[]): string {
   return `<nav class="breadcrumb">${items
     .map((item, i) => {
-      const sep = i > 0 ? '<span class="bc-sep">→</span>' : '';
+      const sep = i > 0 ? '<span class="bc-sep">-></span>' : '';
       if (item.view) {
         return `${sep}<button class="link-btn" data-nav-view="${item.view}" data-entity-id="${item.entityId ?? ''}">${item.label}</button>`;
       }
@@ -100,15 +100,15 @@ export function renderPipeline(): string {
   return `
     <div class="pipeline">
       <button class="pipeline-step" data-nav-view="quotes"><span class="pipe-count">${counts.draft}</span><span class="pipe-label">Quotes</span></button>
-      <span class="pipe-arrow">→</span>
+      <span class="pipe-arrow">-></span>
       <button class="pipeline-step" data-nav-view="quotes"><span class="pipe-count">${counts.approved}</span><span class="pipe-label">Approved</span></button>
-      <span class="pipe-arrow">→</span>
+      <span class="pipe-arrow">-></span>
       <button class="pipeline-step" data-nav-view="orders"><span class="pipe-count">${counts.orders}</span><span class="pipe-label">Orders</span></button>
-      <span class="pipe-arrow">→</span>
+      <span class="pipe-arrow">-></span>
       <button class="pipeline-step" data-nav-view="orders"><span class="pipe-count">${counts.ready}</span><span class="pipe-label">Ready to Bill</span></button>
-      <span class="pipe-arrow">→</span>
+      <span class="pipe-arrow">-></span>
       <button class="pipeline-step" data-nav-view="invoices"><span class="pipe-count">${counts.invoices}</span><span class="pipe-label">Invoices</span></button>
-      <span class="pipe-arrow">→</span>
+      <span class="pipe-arrow">-></span>
       <button class="pipeline-step" data-nav-view="collections"><span class="pipe-count">${counts.ar}</span><span class="pipe-label">Collections</span></button>
     </div>`;
 }
@@ -144,7 +144,7 @@ export function renderCreateQuoteModal(): string {
     .map((c) => `<option value="${c.id}">${c.name} (${c.vertical})</option>`)
     .join('');
   const productOpts = products
-    .map((p) => `<option value="${p.id}" data-price="${p.unitPrice}" data-vertical="${p.vertical}" data-name="${p.name}">${p.name} — ${formatCurrency(p.unitPrice)}/${p.unit}</option>`)
+    .map((p) => `<option value="${p.id}" data-price="${p.unitPrice}" data-vertical="${p.vertical}" data-name="${p.name}">${p.name} - ${formatCurrency(p.unitPrice)}/${p.unit}</option>`)
     .join('');
   const verticalOpts = VERTICALS.map((v) => `<option value="${v}">${v}</option>`).join('');
 
@@ -156,7 +156,7 @@ export function renderCreateQuoteModal(): string {
           <button class="modal-close" data-action="close-modal">&times;</button>
         </div>
         <form class="form" id="create-quote-form">
-          <p class="form-hint">Opportunity → Configure & Price → Save as Draft</p>
+          <p class="form-hint">Opportunity -> Configure & Price -> Save as Draft in Salesforce CPQ</p>
           <label>Customer<select name="customerId" required>${customerOpts}</select></label>
           <label>Vertical<select name="vertical" required>${verticalOpts}</select></label>
           <label>Product<select name="productId" required id="product-select">${productOpts}</select></label>
@@ -190,7 +190,7 @@ export function renderCreateOnboardingModal(customerId?: string): string {
           <button class="modal-close" data-action="close-modal">&times;</button>
         </div>
         <form class="form" id="create-onboarding-form">
-          <p class="form-hint">Electronic form with tax validation, ACH, and e-signature (replaces FormAssembly + DocuSign)</p>
+          <p class="form-hint">Electronic onboarding with required-field validation, Avalara tax checks, ACH confirmation, and DocuSign e-signature</p>
           <label>Customer<select name="customerId" required>${customerOpts}</select></label>
           <label>Country<input name="country" value="US" required /></label>
           <label>Tax ID / EIN<input name="taxId" placeholder="XX-XXXXXXX" required /></label>
@@ -224,7 +224,7 @@ export function renderDetailModal(): string {
       <div class="modal-overlay" data-action="close-modal">
         <div class="modal modal-lg" onclick="event.stopPropagation()">
           <div class="modal-header">
-            <h2>Quote Detail — ${q.id}</h2>
+            <h2>Quote Detail - ${q.id}</h2>
             <button class="modal-close" data-action="close-modal">&times;</button>
           </div>
           ${renderBreadcrumb(crumbs)}
@@ -248,7 +248,7 @@ export function renderDetailModal(): string {
 export function renderUploadDocumentModal(orderId?: string): string {
   const { orders } = getState();
   const orderOpts = orders
-    .map((o) => `<option value="${o.id}" ${o.id === orderId ? 'selected' : ''}>${o.id} — ${o.customer}</option>`)
+    .map((o) => `<option value="${o.id}" ${o.id === orderId ? 'selected' : ''}>${o.id} - ${o.customer}</option>`)
     .join('');
   return `
     <div class="modal-overlay" data-action="close-modal">
@@ -258,7 +258,7 @@ export function renderUploadDocumentModal(orderId?: string): string {
           <button class="modal-close" data-action="close-modal">&times;</button>
         </div>
         <form class="form" id="upload-document-form">
-          <p class="form-hint">Single document location per customer — required before invoice posting</p>
+          <p class="form-hint">Single document location per customer - required before the order can be invoiced in Sage Intacct</p>
           <label>Order<select name="orderId" required>${orderOpts}</select></label>
           <label>Document Type<select name="docType">
             <option>Install Report</option>
@@ -281,7 +281,7 @@ export function renderCreateDisputeModal(invoiceId?: string): string {
   const { invoices } = getState();
   const invOpts = invoices
     .filter((i) => i.status !== 'paid')
-    .map((i) => `<option value="${i.id}" ${i.id === invoiceId ? 'selected' : ''}>${i.id} — ${i.customer} (${i.amount})</option>`)
+    .map((i) => `<option value="${i.id}" ${i.id === invoiceId ? 'selected' : ''}>${i.id} - ${i.customer} (${i.amount})</option>`)
     .join('');
   return `
     <div class="modal-overlay" data-action="close-modal">
@@ -320,7 +320,7 @@ export function renderTagHoldModal(invoiceId?: string): string {
         </div>
         <form class="form" id="tag-hold-form">
           <input type="hidden" name="invoiceId" value="${invoiceId ?? ''}" />
-          <p class="form-hint">Pareto backlog analysis — tag held invoices by root cause</p>
+          <p class="form-hint">Pareto backlog analysis - tag held invoices by root cause</p>
           <label>Hold Category<select name="category" required>${categories}</select></label>
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" data-action="close-modal">Cancel</button>

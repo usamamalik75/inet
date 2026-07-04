@@ -49,7 +49,7 @@ function renderSidebar(): string {
         <div class="brand-logo">iN</div>
         <div class="brand-text">
           <strong>iNet Q2C</strong>
-          <span>Connected Platform</span>
+          <span>Salesforce + Intacct Spine</span>
         </div>
       </div>
       <nav class="nav">
@@ -65,7 +65,7 @@ function renderSidebar(): string {
       </nav>
       <div class="sidebar-footer">
         <div class="footer-label">Flow</div>
-        <p>Quote → Order → Invoice → Cash</p>
+        <p>Quote -> Order -> Invoice -> Cash</p>
         <div class="footer-meta">${meta.version}</div>
       </div>
     </aside>`;

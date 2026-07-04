@@ -84,14 +84,14 @@ export function renderDashboard(): string {
     <header class="page-header">
       <div>
         <h1>Q2C Command Center</h1>
-        <p class="subtitle">End-to-end connected flow — ${meta.currentMonth} of 9-month program</p>
+        <p class="subtitle">Salesforce-led quote-to-cash transformation - ${meta.currentMonth} of 9-month program</p>
       </div>
       <div class="header-badge">${meta.cloudCoreStatus}</div>
     </header>
     ${renderSummaryStats()}
     <section class="section">
       <h2>Connected Pipeline</h2>
-      <p class="section-desc">Click any stage to navigate. Create a quote → approve → onboard → order → invoice → collect cash.</p>
+      <p class="section-desc">Click any stage to navigate. Salesforce drives quote, approval, onboarding, and orders; Sage Intacct drives invoicing, revenue recognition, and collections.</p>
       ${renderPipeline()}
     </section>
     <section class="section">
@@ -123,10 +123,10 @@ export function renderQuotes(): string {
       <td>${formatCurrency(q.amount)}</td>
       <td><span class="badge ${statusClass(q.status)}">${statusLabel(q.status)}</span></td>
       <td>${q.daysOpen}d</td>
-      <td>${order ? linkEntity('order', order.id, order.id) : '—'}</td>
+      <td>${order ? linkEntity('order', order.id, order.id) : '-'}</td>
       <td class="actions-cell">${renderQuoteActions(q)}</td>
     </tr>
-    ${q.pricingError ? `<tr class="sub-row"><td colspan="9"><span class="text-danger">⚠ ${q.pricingError}</span></td></tr>` : ''}`;
+    ${q.pricingError ? `<tr class="sub-row"><td colspan="9"><span class="text-danger">! ${q.pricingError}</span></td></tr>` : ''}`;
     })
     .join('');
 
@@ -138,9 +138,9 @@ export function renderQuotes(): string {
       <td>${o.customer}</td>
       <td>${o.country}</td>
       <td><span class="badge ${statusClass(o.status)}">${statusLabel(o.status)}</span></td>
-      <td>${o.taxValidated ? '✓' : '✗'} Tax</td>
-      <td>${o.achConfirmed ? '✓' : '✗'} ACH</td>
-      <td>${o.signed ? '✓' : '✗'} Signed</td>
+      <td>${o.taxValidated ? 'Yes' : 'No'} Tax</td>
+      <td>${o.achConfirmed ? 'Yes' : 'No'} ACH</td>
+      <td>${o.signed ? 'Yes' : 'No'} Signed</td>
       <td>${o.creditCheck.replace('_', ' ')}</td>
       <td class="actions-cell">${renderOnboardingActions(o.id, o.status)}</td>
     </tr>`
@@ -151,7 +151,7 @@ export function renderQuotes(): string {
     <header class="page-header">
       <div>
         <h1>Quote-to-Order</h1>
-        <p class="subtitle">WS1 — Configure, price, approve, onboard, and convert to order</p>
+        <p class="subtitle">WS1 - Configure, price, approve, onboard, and convert in Salesforce Communications Cloud</p>
       </div>
       ${pageActions(`
         <button class="btn btn-primary" data-action="open-create-quote">+ Create Quote</button>
@@ -159,10 +159,10 @@ export function renderQuotes(): string {
       `)}
     </header>
     <div class="flow-banner">
-      <span>Opportunity</span><span class="flow-arrow">→</span>
-      <span>Configure & Price</span><span class="flow-arrow">→</span>
-      <span>Approve</span><span class="flow-arrow">→</span>
-      <span>Onboard Customer</span><span class="flow-arrow">→</span>
+      <span>Opportunity</span><span class="flow-arrow">-></span>
+      <span>Configure & Price</span><span class="flow-arrow">-></span>
+      <span>Approve</span><span class="flow-arrow">-></span>
+      <span>Onboard Customer</span><span class="flow-arrow">-></span>
       <span>Convert to Order</span>
     </div>
     <section class="section">
@@ -195,7 +195,7 @@ export function renderOrders(): string {
     .map((o) => {
       const inv = getState().invoices.find((i) => i.orderId === o.id);
       const docs = tickets.filter((t) => t.orderId === o.id);
-      const docList = docs.map((d) => `<span class="doc-tag">${d.fileName}</span>`).join(' ') || '—';
+      const docList = docs.map((d) => `<span class="doc-tag">${d.fileName}</span>`).join(' ') || '-';
       return `
     <tr>
       <td>${linkEntity('order', o.id, o.id)}</td>
@@ -205,7 +205,7 @@ export function renderOrders(): string {
       <td><span class="badge ${statusClass(o.status)}">${statusLabel(o.status)}</span></td>
       <td>${o.fieldTicketsUploaded}/${o.fieldTicketsRequired}</td>
       <td class="doc-cell">${docList}</td>
-      <td>${inv ? linkEntity('invoice', inv.id, inv.id) : '—'}</td>
+      <td>${inv ? linkEntity('invoice', inv.id, inv.id) : '-'}</td>
       <td class="actions-cell">${renderOrderActions(o)}</td>
     </tr>
     ${o.holdReason ? `<tr class="sub-row"><td colspan="9"><span class="text-danger">Hold: ${o.holdReason}</span></td></tr>` : ''}`;
@@ -216,7 +216,7 @@ export function renderOrders(): string {
     <header class="page-header">
       <div>
         <h1>Order-to-Invoice</h1>
-        <p class="subtitle">WS2 — Fulfillment, field tickets, auto-post invoicing</p>
+        <p class="subtitle">WS2 - Fulfillment in Salesforce, invoicing in Sage Intacct</p>
       </div>
       <div class="page-actions">
         <button class="btn btn-secondary" data-action="open-upload-document">+ Upload Document</button>
@@ -224,10 +224,10 @@ export function renderOrders(): string {
       </div>
     </header>
     <div class="flow-banner">
-      <span>Order Submitted</span><span class="flow-arrow">→</span>
-      <span>Fulfillment</span><span class="flow-arrow">→</span>
-      <span>Field Tickets</span><span class="flow-arrow">→</span>
-      <span>Generate Invoice</span><span class="flow-arrow">→</span>
+      <span>Order Submitted</span><span class="flow-arrow">-></span>
+      <span>Fulfillment</span><span class="flow-arrow">-></span>
+      <span>Field Tickets</span><span class="flow-arrow">-></span>
+      <span>Push to Intacct</span><span class="flow-arrow">-></span>
       <span>Auto-Post / Exception</span>
     </div>
     <section class="section">
@@ -238,7 +238,7 @@ export function renderOrders(): string {
           <tbody>${orderRows}</tbody>
         </table>
       </div>
-      <div class="info-box"><strong>Rule:</strong> Invoices cannot post without required support documents on the account record.</div>
+      <div class="info-box"><strong>Rule:</strong> Salesforce will not release the order for invoicing until required support documents are attached and ready for Sage Intacct.</div>
     </section>`;
 }
 
@@ -254,8 +254,8 @@ export function renderInvoices(): string {
       <td>${i.customer}</td>
       <td>${formatCurrency(i.amount)}</td>
       <td><span class="badge ${statusClass(i.status)}">${statusLabel(i.status)}</span>${i.autoPosted ? ' <span class="badge badge-success">Auto</span>' : ''}</td>
-      <td>${i.issuedDate ? formatDate(i.issuedDate) : '—'}</td>
-      <td>${i.revRecStatus ? statusLabel(i.revRecStatus) : '—'}</td>
+      <td>${i.issuedDate ? formatDate(i.issuedDate) : '-'}</td>
+      <td>${i.revRecStatus ? statusLabel(i.revRecStatus) : '-'}</td>
       <td class="actions-cell">${renderInvoiceActions(i)}</td>
     </tr>
     ${i.holdReason ? `<tr class="sub-row"><td colspan="8"><span class="text-danger">Hold: ${i.holdReason}</span></td></tr>` : ''}`
@@ -266,7 +266,7 @@ export function renderInvoices(): string {
     <header class="page-header">
       <div>
         <h1>Invoicing & Revenue Recognition</h1>
-        <p class="subtitle">ASC 606 rev rec — auto-post clean orders, exception queue for holds</p>
+        <p class="subtitle">Sage Intacct owns invoice generation, ASC 606 revenue recognition, and exception handling</p>
       </div>
     </header>
     <section class="section">
@@ -277,7 +277,7 @@ export function renderInvoices(): string {
           <tbody>${invoiceRows}</tbody>
         </table>
       </div>
-      <div class="info-box"><strong>Target:</strong> Invoice issuance lag ≤ 5 days. Touchless auto-post for clean orders.</div>
+      <div class="info-box"><strong>Target:</strong> Invoice issuance lag <= 5 days. Touchless auto-post for clean orders.</div>
     </section>`;
 }
 
@@ -326,7 +326,7 @@ export function renderCollections(): string {
     <header class="page-header">
       <div>
         <h1>Invoice-to-Cash</h1>
-        <p class="subtitle">WS3 — Collections, dunning ladder, DSO management</p>
+        <p class="subtitle">WS3 - Collections, dunning ladder, and DSO management in Sage Intacct</p>
       </div>
       <div class="header-badge">Total AR: ${formatCurrency(totalAR)}</div>
     </header>
@@ -336,22 +336,22 @@ export function renderCollections(): string {
       <div class="stat-card stat-warning"><div class="stat-value">Monthly</div><div class="stat-label">Statement Cadence</div></div>
     </div>
     <div class="flow-banner">
-      <span>Invoice Sent</span><span class="flow-arrow">→</span>
-      <span>Revenue Recognized</span><span class="flow-arrow">→</span>
-      <span>Dunning Ladder</span><span class="flow-arrow">→</span>
+      <span>Invoice Sent</span><span class="flow-arrow">-></span>
+      <span>Revenue Recognized</span><span class="flow-arrow">-></span>
+      <span>Dunning Ladder</span><span class="flow-arrow">-></span>
       <span>Cash Collected</span>
     </div>
     <section class="section">
       <h2>AR Aging</h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Customer</th><th>Total</th><th>Current</th><th>1–30</th><th>31–60</th><th>61–90</th><th>120+</th><th>Dunning</th><th>Last Contact</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Total</th><th>Current</th><th>1-30</th><th>31-60</th><th>61-90</th><th>120+</th><th>Dunning</th><th>Last Contact</th></tr></thead>
           <tbody>${arRows}</tbody>
         </table>
       </div>
     </section>
     <section class="section">
-      <h2>Open Invoices — Collections Actions</h2>
+      <h2>Open Invoices - Collections Actions</h2>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Outstanding</th><th>Dunning</th><th>Actions</th></tr></thead>
@@ -391,7 +391,7 @@ export function renderCustomers(): string {
       <td>${c.fieldTicketsRequired} required</td>
       <td>${c.creditTier.replace('_', ' ')}</td>
       <td><span class="sync-tags">${sync}</span></td>
-      <td>${c.notes || '—'}</td>
+      <td>${c.notes || '-'}</td>
       <td class="actions-cell">${!getState().onboardings.find((o) => o.customerId === c.id) ? actionBtn('open-onboarding', c.id, 'Onboard', 'secondary') : ''}</td>
     </tr>`;
     })
@@ -401,7 +401,7 @@ export function renderCustomers(): string {
     <header class="page-header">
       <div>
         <h1>Customer Master</h1>
-        <p class="subtitle">Single master record — reconciled across SF, Intacct, CloudCore</p>
+        <p class="subtitle">Single customer master in Salesforce, synchronized to Intacct while CloudCore is retired</p>
       </div>
       ${pageActions(`<button class="btn btn-secondary" data-action="open-create-onboarding">+ New Onboarding</button>`)}
     </header>
@@ -424,9 +424,10 @@ export function renderCatalog(): string {
     <tr>
       <td><strong>${p.id}</strong></td>
       <td>${p.name}</td>
+      <td>${p.family}</td>
       <td>${p.vertical}</td>
       <td>${formatCurrency(p.unitPrice)}/${p.unit}</td>
-      <td>${p.approvedBulkRate ? `$${p.approvedBulkRate} approved` : '—'}</td>
+      <td>${p.approvedBulkRate ? `$${p.approvedBulkRate} approved` : '-'}</td>
       <td>${p.requiresFieldTickets}</td>
     </tr>`
     )
@@ -436,18 +437,18 @@ export function renderCatalog(): string {
     <header class="page-header">
       <div>
         <h1>Enterprise Product Catalog</h1>
-        <p class="subtitle">CPQ product model — bundles, pricing rules, and approval workflows</p>
+        <p class="subtitle">Communications Cloud CPQ catalog for Continuum, Sentinel, and Nexora offers</p>
       </div>
     </header>
     <section class="section">
       <h2>Products & Pricing</h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>ID</th><th>Product</th><th>Vertical</th><th>Price</th><th>Bulk Rate</th><th>Field Tickets</th></tr></thead>
+          <thead><tr><th>ID</th><th>Product</th><th>Family</th><th>Vertical</th><th>Price</th><th>Bulk Rate</th><th>Field Tickets</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>
-      <div class="info-box"><strong>Pricing Rule:</strong> Starlink bulk changes require approval. System flags rates that deviate from approved $135/unit.</div>
+      <div class="info-box"><strong>Pricing Rule:</strong> Starlink and connectivity bulk changes require approval. Guided selling bundles connectivity, security, and analytics into one governed quote.</div>
     </section>`;
 }
 
@@ -497,8 +498,8 @@ export function renderBacklog(): string {
       <td>${linkEntity('invoice', i.id, i.id)}</td>
       <td>${i.customer}</td>
       <td>${formatCurrency(i.amount)}</td>
-      <td>${i.holdCategory ? HOLD_CATEGORY_LABELS[i.holdCategory] : '—'}</td>
-      <td>${i.holdReason ?? '—'}</td>
+      <td>${i.holdCategory ? HOLD_CATEGORY_LABELS[i.holdCategory] : '-'}</td>
+      <td>${i.holdReason ?? '-'}</td>
       <td class="actions-cell">${renderInvoiceActions(i)}</td>
     </tr>`
     )
@@ -508,11 +509,11 @@ export function renderBacklog(): string {
     <header class="page-header">
       <div>
         <h1>Billing Backlog Tracker</h1>
-        <p class="subtitle">WS2 — Tag held invoices by reason · Pareto top causes · Clear backlog</p>
+        <p class="subtitle">WS2 - Tag held invoices by reason · Pareto top causes · Clear backlog</p>
       </div>
     </header>
     <section class="section">
-      <h2>Pareto — Hold Reasons by $</h2>
+      <h2>Pareto - Hold Reasons by $</h2>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Hold Category</th><th>Count</th><th>Amount</th><th>Distribution</th></tr></thead>
@@ -543,7 +544,7 @@ export function renderDisputes(): string {
       <td>${d.customer}</td>
       <td>${d.reason}</td>
       <td><span class="badge ${statusClass(d.status)}">${statusLabel(d.status)}</span></td>
-      <td>${d.rootCause ?? '—'}</td>
+      <td>${d.rootCause ?? '-'}</td>
       <td>${d.assignedTo}</td>
       <td class="actions-cell">
         <div class="action-row">
@@ -559,7 +560,7 @@ export function renderDisputes(): string {
     <header class="page-header">
       <div>
         <h1>Dispute Management</h1>
-        <p class="subtitle">WS3 — Track billing disputes and root causes with Customer Success</p>
+        <p class="subtitle">WS3 - Track billing disputes and root causes with Customer Success</p>
       </div>
       ${pageActions(`<button class="btn btn-primary" data-action="open-create-dispute">+ Open Dispute</button>`)}
     </header>
@@ -622,15 +623,15 @@ export function renderProgram(): string {
     <header class="page-header">
       <div>
         <h1>Program Governance</h1>
-        <p class="subtitle">9-Month Timeline · Sponsor: ${meta.sponsor}</p>
+        <p class="subtitle">9-Month Timeline - Sponsor: ${meta.sponsor}</p>
       </div>
     </header>
     <section class="section"><h2>Decision Gates</h2><div class="gate-grid">${gateCards}</div></section>
     <section class="section"><h2>Open Decisions</h2><div class="gate-grid">${decisionCards}</div></section>
     <section class="section"><h2>Workstreams</h2><div class="ws-grid">${wsCards}</div></section>
     <section class="section">
-      <h2>Platform Direction</h2>
-      <p class="section-desc">This comparison supports planning and governance, so it lives here instead of the day-to-day dashboard.</p>
+      <h2>Current vs Target Architecture</h2>
+      <p class="section-desc">This keeps the transformation grounded in the charter: Salesforce expands, Sage Intacct stays, and CloudCore is retired after a controlled cutover.</p>
       ${renderArchitectureComparison()}
     </section>`;
 }

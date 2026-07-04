@@ -19,6 +19,7 @@ export interface KPI {
 export interface Product {
   id: string;
   name: string;
+  family: 'Continuum' | 'Sentinel' | 'Nexora';
   vertical: string;
   unitPrice: number;
   unit: string;
