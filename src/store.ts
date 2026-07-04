@@ -32,6 +32,7 @@ import type {
   ModalId,
   Order,
   Quote,
+  QuoteLineItem,
   RecoveryPlan,
   Toast,
   ViewId,
@@ -229,37 +230,60 @@ export function isOnboardingApproved(customerId: string): boolean {
 
 export function createQuote(data: {
   customerId: string;
-  productId: string;
-  productName: string;
   vertical: string;
-  quantity: number;
-  unitPrice: number;
-  discountPct: number;
+  lineItems: Array<{
+    productId: string;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+    discountPct: number;
+  }>;
 }): void {
   const customer = getCustomer(data.customerId);
   if (!customer) {
     toast('error', 'Customer not found');
     return;
   }
-  const amount = Math.round(data.quantity * data.unitPrice * (1 - data.discountPct / 100));
-  const pricingError = validateQuotePrice(data.productId, data.unitPrice);
+  if (!data.lineItems.length) {
+    toast('error', 'Add at least one quote item');
+    return;
+  }
+  const lineItems: QuoteLineItem[] = data.lineItems.map((item) => {
+    const lineAmount = Math.round(item.quantity * item.unitPrice * (1 - item.discountPct / 100));
+    return {
+      ...item,
+      lineAmount,
+      pricingError: validateQuotePrice(item.productId, item.unitPrice),
+    };
+  });
+  const amount = lineItems.reduce((sum, item) => sum + item.lineAmount, 0);
+  const pricingError =
+    lineItems
+      .filter((item) => item.pricingError)
+      .map((item) => item.pricingError)
+      .join(' | ') || undefined;
   const id = `Q-2026-${String(++state.quoteSeq).padStart(4, '0')}`;
   const createdDate = today();
+  const primaryItem = lineItems[0];
   const quote: Quote = {
     id,
     customerId: data.customerId,
     customer: customer.name,
     vertical: data.vertical,
-    productId: data.productId,
-    product: `${data.productName} (${data.quantity} ${data.quantity === 1 ? 'unit' : 'units'})`,
-    quantity: data.quantity,
-    unitPrice: data.unitPrice,
+    productId: primaryItem.productId,
+    product:
+      lineItems.length === 1
+        ? `${primaryItem.productName} (${primaryItem.quantity} ${primaryItem.quantity === 1 ? 'unit' : 'units'})`
+        : `${primaryItem.productName} + ${lineItems.length - 1} more item${lineItems.length > 2 ? 's' : ''}`,
+    quantity: lineItems.reduce((sum, item) => sum + item.quantity, 0),
+    unitPrice: primaryItem.unitPrice,
     amount,
     status: pricingError ? 'stuck' : 'draft',
     createdDate,
     daysOpen: 0,
+    lineItems,
     pricingError,
-    discountPct: data.discountPct,
+    discountPct: 0,
   };
   state.quotes.unshift(quote);
   log(`Quote ${id} created for ${customer.name} — ${pricingError ? 'pricing error flagged' : 'draft'}`, 'quote', id);
@@ -305,8 +329,24 @@ export function approveQuote(quoteId: string): void {
 export function fixQuotePricing(quoteId: string): void {
   const quote = getQuote(quoteId);
   if (!quote) return;
-  quote.unitPrice = 135;
-  quote.amount = Math.round(quote.quantity * 135 * (1 - (quote.discountPct ?? 0) / 100));
+  if (quote.lineItems?.length) {
+    quote.lineItems = quote.lineItems.map((item) => {
+      const needsCorrection = Boolean(validateQuotePrice(item.productId, item.unitPrice));
+      const unitPrice = needsCorrection ? 135 : item.unitPrice;
+      return {
+        ...item,
+        unitPrice,
+        lineAmount: Math.round(item.quantity * unitPrice * (1 - item.discountPct / 100)),
+        pricingError: undefined,
+      };
+    });
+    quote.amount = quote.lineItems.reduce((sum, item) => sum + item.lineAmount, 0);
+    quote.quantity = quote.lineItems.reduce((sum, item) => sum + item.quantity, 0);
+    quote.unitPrice = quote.lineItems[0]?.unitPrice ?? quote.unitPrice;
+  } else {
+    quote.unitPrice = 135;
+    quote.amount = Math.round(quote.quantity * 135 * (1 - (quote.discountPct ?? 0) / 100));
+  }
   quote.pricingError = undefined;
   quote.status = 'draft';
   log(`Quote ${quoteId} pricing corrected to $135/unit`, 'quote', quoteId);

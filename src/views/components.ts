@@ -1,4 +1,4 @@
-import { products, VERTICALS } from '../data/catalog';
+import { VERTICALS } from '../data/catalog';
 import {
   getInvoiceByOrder,
   getOnboardingByCustomer,
@@ -143,9 +143,6 @@ export function renderCreateQuoteModal(): string {
   const customerOpts = customers
     .map((c) => `<option value="${c.id}">${c.name} (${c.vertical})</option>`)
     .join('');
-  const productOpts = products
-    .map((p) => `<option value="${p.id}" data-price="${p.unitPrice}" data-vertical="${p.vertical}" data-name="${p.name}">${p.name} - ${formatCurrency(p.unitPrice)}/${p.unit}</option>`)
-    .join('');
   const verticalOpts = VERTICALS.map((v) => `<option value="${v}">${v}</option>`).join('');
 
   return `
@@ -159,12 +156,11 @@ export function renderCreateQuoteModal(): string {
           <p class="form-hint">Opportunity -> Configure & Price -> Save as Draft in Salesforce CPQ</p>
           <label>Customer<select name="customerId" required>${customerOpts}</select></label>
           <label>Vertical<select name="vertical" required>${verticalOpts}</select></label>
-          <label>Product<select name="productId" required id="product-select">${productOpts}</select></label>
-          <div class="form-row">
-            <label>Quantity<input type="number" name="quantity" value="1" min="1" required /></label>
-            <label>Unit Price ($)<input type="number" name="unitPrice" id="unit-price" step="0.01" required /></label>
-            <label>Discount %<input type="number" name="discountPct" value="0" min="0" max="50" /></label>
+          <div class="quote-line-items-head">
+            <span>Quote Items</span>
+            <button type="button" class="btn btn-secondary" id="add-quote-item">+ Add Item</button>
           </div>
+          <div id="quote-line-items" class="quote-line-items"></div>
           <div class="form-preview" id="quote-preview">Estimated total: $0</div>
           <div class="modal-actions">
             <button type="button" class="btn btn-secondary" data-action="close-modal">Cancel</button>
@@ -236,6 +232,31 @@ export function renderDetailModal(): string {
             <div><span class="detail-label">Onboarding</span><span>${ob ? `<span class="badge ${statusClass(ob.status)}">${statusLabel(ob.status)}</span>` : '<span class="text-danger">Not started</span>'}</span></div>
             <div><span class="detail-label">Created</span><span>${formatDate(q.createdDate)} (${q.daysOpen}d open)</span></div>
           </div>
+          ${
+            q.lineItems?.length
+              ? `<div class="detail-line-items">
+                  <div class="detail-line-items-title">Quote Line Items</div>
+                  <div class="table-wrap">
+                    <table>
+                      <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Discount</th><th>Line Total</th></tr></thead>
+                      <tbody>
+                        ${q.lineItems
+                          .map(
+                            (item) => `<tr>
+                              <td>${item.productName}</td>
+                              <td>${item.quantity}</td>
+                              <td>${formatCurrency(item.unitPrice)}</td>
+                              <td>${item.discountPct}%</td>
+                              <td>${formatCurrency(item.lineAmount)}</td>
+                            </tr>`
+                          )
+                          .join('')}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>`
+              : ''
+          }
           ${q.pricingError ? `<div class="alert alert-danger">${q.pricingError}</div>` : ''}
           ${renderQuoteActions(q)}
         </div>

@@ -28,7 +28,9 @@ import {
   tagInvoiceHold,
   uploadFieldTicket,
 } from './store';
+import { getProduct, products } from './data/catalog';
 import type { HoldReasonCategory, ViewId } from './types';
+import { formatCurrency } from './utils';
 import { navItems, renderShell } from './views/renderViews';
 
 const MODAL_ACTIONS = [
@@ -220,51 +222,145 @@ function setupQuoteForm(): void {
   const form = document.querySelector<HTMLFormElement>('#create-quote-form');
   if (!form) return;
 
-  const productSelect = form.querySelector<HTMLSelectElement>('#product-select');
-  const unitPriceInput = form.querySelector<HTMLInputElement>('#unit-price');
+  const itemsContainer = form.querySelector<HTMLDivElement>('#quote-line-items');
+  const addItemBtn = form.querySelector<HTMLButtonElement>('#add-quote-item');
   const preview = form.querySelector<HTMLDivElement>('#quote-preview');
-  const qtyInput = form.querySelector<HTMLInputElement>('input[name="quantity"]');
-  const discountInput = form.querySelector<HTMLInputElement>('input[name="discountPct"]');
+  if (!itemsContainer || !addItemBtn || !preview) return;
+  const lineItemsRoot = itemsContainer;
+  const previewEl = preview;
 
-  function updatePreview(): void {
-    const qty = Number(qtyInput?.value ?? 1);
-    const price = Number(unitPriceInput?.value ?? 0);
-    const disc = Number(discountInput?.value ?? 0);
-    const total = Math.round(qty * price * (1 - disc / 100));
-    if (preview) preview.textContent = `Estimated total: $${total.toLocaleString()}`;
+  const productOptions = products
+    .map(
+      (product) =>
+        `<option value="${product.id}" data-price="${product.unitPrice}" data-name="${product.name}">${product.name} - ${formatCurrency(product.unitPrice)}/${product.unit}</option>`
+    )
+    .join('');
+
+  function renderLineItemRow(index: number): string {
+    return `
+      <div class="quote-line-item" data-line-item>
+        <div class="quote-line-item-header">
+          <strong>Item ${index + 1}</strong>
+          <button type="button" class="btn btn-secondary quote-line-remove" data-remove-line ${index === 0 ? 'disabled' : ''}>Remove</button>
+        </div>
+        <div class="form-row quote-line-grid">
+          <label>Product<select name="productId" required data-line-product>${productOptions}</select></label>
+          <label>Quantity<input type="number" name="quantity" value="1" min="1" required data-line-qty /></label>
+          <label>Unit Price ($)<input type="number" name="unitPrice" step="0.01" required data-line-price /></label>
+          <label>Discount %<input type="number" name="discountPct" value="0" min="0" max="50" data-line-discount /></label>
+        </div>
+        <div class="quote-line-subtotal" data-line-subtotal>Line total: $0</div>
+      </div>`;
   }
 
-  productSelect?.addEventListener('change', () => {
-    const opt = productSelect.selectedOptions[0];
-    if (unitPriceInput && opt) unitPriceInput.value = opt.dataset.price ?? '0';
-    const vertical = form.querySelector<HTMLSelectElement>('select[name="vertical"]');
-    if (vertical && opt?.dataset.vertical) vertical.value = opt.dataset.vertical;
+  function syncLineItem(row: HTMLElement): void {
+    const productSelect = row.querySelector<HTMLSelectElement>('[data-line-product]');
+    const unitPriceInput = row.querySelector<HTMLInputElement>('[data-line-price]');
+    const qtyInput = row.querySelector<HTMLInputElement>('[data-line-qty]');
+    const discountInput = row.querySelector<HTMLInputElement>('[data-line-discount]');
+    const subtotal = row.querySelector<HTMLDivElement>('[data-line-subtotal]');
+    if (!productSelect || !unitPriceInput || !qtyInput || !discountInput || !subtotal) return;
+
+    const option = productSelect.selectedOptions[0];
+    if (option && (!unitPriceInput.value || document.activeElement === productSelect)) {
+      unitPriceInput.value = option.dataset.price ?? '0';
+    }
+
+    const qty = Number(qtyInput.value || 0);
+    const price = Number(unitPriceInput.value || 0);
+    const discount = Number(discountInput.value || 0);
+    const total = Math.round(qty * price * (1 - discount / 100));
+    subtotal.textContent = `Line total: ${formatCurrency(total)}`;
+  }
+
+  function renumberLineItems(): void {
+    lineItemsRoot.querySelectorAll<HTMLElement>('[data-line-item]').forEach((row, index, allRows) => {
+      const title = row.querySelector('.quote-line-item-header strong');
+      const removeBtn = row.querySelector<HTMLButtonElement>('[data-remove-line]');
+      if (title) title.textContent = `Item ${index + 1}`;
+      if (removeBtn) removeBtn.disabled = allRows.length === 1;
+    });
+  }
+
+  function updatePreview(): void {
+    let total = 0;
+    lineItemsRoot.querySelectorAll<HTMLElement>('[data-line-item]').forEach((row) => {
+      syncLineItem(row);
+      const subtotalText = row.querySelector<HTMLDivElement>('[data-line-subtotal]')?.textContent ?? '';
+      const numeric = Number(subtotalText.replace(/[^\d.-]/g, ''));
+      total += Number.isFinite(numeric) ? numeric : 0;
+    });
+    previewEl.textContent = `Estimated total: ${formatCurrency(total)}`;
+  }
+
+  function addLineItem(): void {
+    lineItemsRoot.insertAdjacentHTML('beforeend', renderLineItemRow(lineItemsRoot.children.length));
+    const row = lineItemsRoot.lastElementChild as HTMLElement | null;
+    if (!row) return;
+    syncLineItem(row);
+    renumberLineItems();
+    updatePreview();
+  }
+
+  addItemBtn.addEventListener('click', () => addLineItem());
+
+  lineItemsRoot.addEventListener('change', (e) => {
+    const target = e.target as HTMLElement;
+    const row = target.closest<HTMLElement>('[data-line-item]');
+    if (!row) return;
+    if (target instanceof HTMLSelectElement && target.matches('[data-line-product]')) {
+      const product = getProduct(target.value);
+      const unitPriceInput = row.querySelector<HTMLInputElement>('[data-line-price]');
+      if (product && unitPriceInput) {
+        unitPriceInput.value = String(product.unitPrice);
+      }
+    }
     updatePreview();
   });
 
-  unitPriceInput?.addEventListener('input', updatePreview);
-  qtyInput?.addEventListener('input', updatePreview);
-  discountInput?.addEventListener('input', updatePreview);
-
-  if (productSelect && unitPriceInput) {
-    const opt = productSelect.selectedOptions[0];
-    unitPriceInput.value = opt?.dataset.price ?? '135';
+  lineItemsRoot.addEventListener('input', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('[data-line-item]')) return;
     updatePreview();
-  }
+  });
+
+  lineItemsRoot.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (!target.matches('[data-remove-line]')) return;
+    const row = target.closest<HTMLElement>('[data-line-item]');
+    if (!row) return;
+    row.remove();
+    renumberLineItems();
+    updatePreview();
+  });
+
+  addLineItem();
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(form);
-    const productId = fd.get('productId') as string;
-    const opt = productSelect?.selectedOptions[0];
+    const lineItems = Array.from(lineItemsRoot.querySelectorAll<HTMLElement>('[data-line-item]'))
+      .map((row) => {
+        const productSelect = row.querySelector<HTMLSelectElement>('[data-line-product]');
+        const qtyInput = row.querySelector<HTMLInputElement>('[data-line-qty]');
+        const unitPriceInput = row.querySelector<HTMLInputElement>('[data-line-price]');
+        const discountInput = row.querySelector<HTMLInputElement>('[data-line-discount]');
+        if (!productSelect || !qtyInput || !unitPriceInput || !discountInput) return null;
+        const selected = productSelect.selectedOptions[0];
+        return {
+          productId: productSelect.value,
+          productName: selected?.dataset.name ?? selected?.textContent ?? 'Product',
+          quantity: Number(qtyInput.value),
+          unitPrice: Number(unitPriceInput.value),
+          discountPct: Number(discountInput.value),
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+
     createQuote({
       customerId: fd.get('customerId') as string,
-      productId,
-      productName: opt?.dataset.name ?? 'Product',
       vertical: fd.get('vertical') as string,
-      quantity: Number(fd.get('quantity')),
-      unitPrice: Number(fd.get('unitPrice')),
-      discountPct: Number(fd.get('discountPct')),
+      lineItems,
     });
   });
 }

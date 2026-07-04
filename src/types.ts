@@ -39,6 +39,16 @@ export interface Customer {
   notes: string;
 }
 
+export interface QuoteLineItem {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  discountPct: number;
+  lineAmount: number;
+  pricingError?: string;
+}
+
 export interface Quote {
   id: string;
   customerId: string;
@@ -52,6 +62,7 @@ export interface Quote {
   status: QuoteStatus;
   createdDate: string;
   daysOpen: number;
+  lineItems?: QuoteLineItem[];
   pricingError?: string;
   approver?: string;
   discountPct?: number;
